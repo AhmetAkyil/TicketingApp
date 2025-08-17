@@ -59,7 +59,7 @@ A simple **ASP.NET Core MVC** ticketing app that includes both **secure** and **
 
 - **Program/Startup** – auth cookies, rate limiting, DI  
   **`Program.cs`** →  
-  https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/TicketSystem/Program.cs
+  https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/Program.cs
 
 - **Data** – EF Core DbContext, relationships  
   **`Data/AppDbContext.cs`** →  
