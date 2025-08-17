@@ -1,12 +1,11 @@
 # Ticket System – OWASP Security Demo (ASP.NET Core MVC)
 
-This repository demonstrates **OWASP Top 10** concepts — focusing on:
+This repository demonstrates **OWASP Top 10** concepts with a focus on:
 
 - **A03: SQL Injection**
 - **A07: Identification & Authentication Failures**
 
-The project is a simple **ASP.NET Core MVC** ticketing app.  
-It contains both **secure implementations** and **deliberately vulnerable endpoints** for demonstration.
+A simple **ASP.NET Core MVC** ticketing app that includes both **secure** and **deliberately vulnerable** endpoints for demos.
 
 ---
 
@@ -33,95 +32,112 @@ It contains both **secure implementations** and **deliberately vulnerable endpoi
    - ⚠️ Weak: `/auth/login-open` → EF LINQ but **no CAPTCHA** / **no rate limit**
    - ❌ Vulnerable: `/auth/login-insecure` → **Raw SQL** (`FromSqlRaw`) → SQL Injection
 
-2. **Ticket Operations**
-   - Create / Edit / Delete tickets with **CSRF protection**
-   - Only **Creator**, **Assignee**, or **Admin** may edit/view
+2. **Tickets**
+   - Create / Edit / Delete with **CSRF protection**
+   - View/Edit rights: **Creator**, **Assignee**, **Admin**
 
-3. **Comment Operations**
-   - Add / Edit / Delete with CSRF and ownership checks
+3. **Comments**
+   - Add / Edit / Delete with CSRF + ownership checks
 
-4. **Admin Operations**
-   - List & manage users (Admin only)
-   - **Auto-create user endpoint** included for demo
+4. **Admin**
+   - Manage users (Admin-only)
+   - Demo helper: auto user create
 
 ---
 
 ## 📌 What Changed vs Previous Version
 
-- Adopted **Cookie Authentication + Claims** with `[Authorize]` attributes  
-- Added **ASP.NET Rate Limiter** (`LoginPolicy`)  
-- Integrated **Google reCAPTCHA** service  
-- Added a separate **`UserInsecure`** table for SQLi demo  
-- Hardened controllers with `[ValidateAntiForgeryToken]` and ownership checks  
+- Cookie Auth + **Claims**; attribute-based security (`[Authorize]`, `[Authorize(Roles="Admin")]`)
+- **ASP.NET Rate Limiter** (`LoginPolicy`) on secure login
+- **Google reCAPTCHA** integration
+- Dedicated **`UserInsecure`** table for SQLi demo
+- Widespread `[ValidateAntiForgeryToken]` + ownership checks
 
 ---
 
 ## 🏗 Architecture
 
-- **Program & Startup** — Auth cookies, rate limiter, DI registrations  
-  [Program.cs](https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/Program.cs)
+- **Program/Startup** – auth cookies, rate limiting, DI  
+  **`Program.cs`** →  
+  https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/TicketSystem/Program.cs
 
-- **Data Layer** — EF Core context, DbSets, relationships  
-  [AppDbContext.cs](https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/Data/AppDbContext.cs)
+- **Data** – EF Core DbContext, relationships  
+  **`Data/AppDbContext.cs`** →  
+  https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/TicketSystem/Data/AppDbContext.cs
 
-- **MVC** — Controllers, Views, Models  
+- **Config** – app settings, keys  
+  **`appsettings.json`** →  
+  https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/TicketSystem/appsettings.json
+
+- **MVC** – Controllers, Views, Models (links aşağıda)
 
 ---
 
 ## 📂 Entities
 
-- **User** — Minimal user record (Email, Password, Role). ⚠️ Plain-text for demo  
-  [User.cs](https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/Models/User.cs)
+- **User** — Minimal user (Email, Password, Role). _Plain-text for demo (bilerek)._  
+  https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/TicketSystem/Models/User.cs
 
-- **UserInsecure** — Separate table used for SQL Injection demo  
-  [UserInsecure.cs](https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/Models/UserInsecure.cs)
+- **UserInsecure** — SQLi gösterimi için ayrılmış tablo.  
+  https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/TicketSystem/Models/UserInsecure.cs
 
-- **Ticket** — Title, Description, Status + Creator/Assignee  
-  [Ticket.cs](https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/Models/Ticket.cs)
+- **Ticket** — Title, Description, Status; `CreatedByUser`, `AssignedToUser`.  
+  https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/TicketSystem/Models/Ticket.cs
 
-- **Comment** — Ticket comments with author and timestamps  
-  [Comment.cs](https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/Models/Comment.cs)
+- **Comment** — Ticket yorumları; yazar + timestamp.  
+  https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/TicketSystem/Models/Comment.cs
 
 ---
 
 ## ⚙ Controllers & Endpoints
 
-### [AuthController.cs](https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/Controllers/AuthController.cs)
-- Secure login: reCAPTCHA + RateLimiter + EF LINQ (parameterized)  
-- Weak login: no CAPTCHA / no rate limit (brute-force demo)  
-- Vulnerable login: `FromSqlRaw` with string concat (SQL Injection demo)  
-- Logout & AccessDenied endpoints  
+- **AuthController**
+  - `/auth/login` → **secure** (RateLimiter + reCAPTCHA + EF LINQ)
+  - `/auth/login-open` → **weak** (brute force demoları)
+  - `/auth/login-insecure` → **vulnerable** (`FromSqlRaw` string concat → **SQLi**)
+  - `/auth/logout`, `/auth/access-denied`
+  https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/TicketSystem/Controllers/AuthController.cs
 
-### [UsersController.cs](https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/Controllers/UsersController.cs)
-- Admin-only (`[Authorize(Roles="Admin")]`)  
-- List/Details/Create/Edit (CSRF-protected)  
-- Demo misconfig: `create-auto` can be `[AllowAnonymous]`  
+- **UsersController**
+  - `[Authorize(Roles="Admin")]` (Admin-only)
+  - List/Details/Create/Edit (CSRF)
+  - _Demo misconfig_: `create-auto` örneği (AllowAnonymous + no CSRF)
+  https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/TicketSystem/Controllers/UsersController.cs
 
-### [TicketsController.cs](https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/Controllers/TicketsController.cs)
-- `[Authorize]` class-level  
-- Ownership checks: only Creator or Admin may modify  
-- CSRF protection on create/edit/delete  
+- **TicketsController**
+  - `[Authorize]` (login zorunlu)
+  - **Ownership checks**: sadece **Creator** veya **Admin** modifiye edebilir
+  - Create/Edit/Delete → **[ValidateAntiForgeryToken]**
+  https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/TicketSystem/Controllers/TicketsController.cs
 
-### [CommentsController.cs](https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/Controllers/CommentsController.cs)
-- `[Authorize]` class-level  
-- Add/Edit/Delete with CSRF + ownership checks  
+- **CommentsController**
+  - `[Authorize]`
+  - Add/Edit/Delete with CSRF + ownership checks
+  https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/TicketSystem/Controllers/CommentsController.cs
 
-### [KanbanController.cs](https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/Controllers/KanbanController.cs)  
-- Board/pin helpers (UI feature, not central to security demo)  
+- **KanbanController** (opsiyonel UI)
+  - Basit board/pin özellikleri (güvenlik demosunun parçası değil)
+  https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/TicketSystem/Controllers/KanbanController.cs
 
 ---
 
 ## 🛠 Services
 
-- [RecaptchaService.cs](https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/Services/RecaptchaService.cs) — Verifies Google reCAPTCHA  
-- [AccountCreationService.cs](https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/Services/AccountCreationService.cs) — Generates demo users  
-- [LoginAttemptService.cs](https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/Services/LoginAttemptService.cs) — Tracks failed attempts  
+- **RecaptchaService** — Google reCAPTCHA doğrulaması  
+  https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/TicketSystem/Services/RecaptchaService.cs
+
+- **AccountCreationService** — Demo kullanıcı üretir  
+  https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/TicketSystem/Services/AccountCreationService.cs
+
+- **LoginAttemptService** — (İllüstratif) login denemesi takibi  
+  https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/TicketSystem/Services/LoginAttemptService.cs
 
 ---
 
 ## 🔐 Security Highlights (OWASP)
 
 ### A03: Injection (SQLi)
+**Vulnerable (demo):**
 ```csharp
 // /auth/login-insecure
 var sql = $"SELECT * FROM UsersInsecure WHERE Email = '{email}' AND Password = '{password}'";
