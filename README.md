@@ -58,7 +58,7 @@ A simple **ASP.NET Core MVC** ticketing app that includes both **secure** and **
 
 ## 📂 Entities
 
-- **User** — Minimal user (Email, Password, Role). ⚠️ Passwords stored in **plain text** for demo.  
+- **User** — Minimal user (Email, Password, Role). 
   [User.cs](https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/Models/User.cs)
 
 - **Ticket** — Title, Description, Status; `CreatedByUser`, `AssignedToUser`.  
