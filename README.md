@@ -60,7 +60,7 @@ It contains both **secure implementations** and **deliberately vulnerable endpoi
 
 - **Program & Startup**
   - Auth cookies, rate limiter, DI registrations  
-  - **File:** [`TicketingSystem/Program.cs`](TicketingApp/Program.cs)
+  - **File:** [`TicketingApp/Program.cs`](TicketingApp/Program.cs)
 
 - **Data Layer**
   - EF Core context, DbSets, relationships  
