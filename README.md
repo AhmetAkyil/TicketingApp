@@ -63,7 +63,7 @@ A simple **ASP.NET Core MVC** ticketing app that includes both **secure** and **
 
 - **Data** – EF Core DbContext, relationships  
   **`Data/AppDbContext.cs`** →  
-  https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystemData/AppDbContext.cs
+  https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/Data/AppDbContext.cs
 
 
 
