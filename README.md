@@ -2,13 +2,12 @@
 
 This repository demonstrates **OWASP Top 10** concepts — focusing on:
 
-- **A03: Injection (SQLi)**
+- **A03: SQL Injection**
 - **A07: Identification & Authentication Failures**
 
 The project is a simple **ASP.NET Core MVC** ticketing app.  
 It contains both **secure implementations** and **deliberately vulnerable endpoints** for demonstration.
 
-⚠️ **Warning:** Do not deploy this project as-is in production.
 
 ---
 
