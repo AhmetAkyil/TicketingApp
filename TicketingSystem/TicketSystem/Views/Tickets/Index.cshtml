@@ -1,0 +1,39 @@
+﻿@model IEnumerable<TicketSystem.Models.Ticket>
+@{
+    ViewData["Title"] = "Tickets";
+    Layout = "~/Views/Shared/_TemplateLayout.cshtml";
+}
+
+<h1 class="mt-4">Ticket List</h1>
+
+<a asp-action="Create" class="btn btn-success mb-3">Create New Ticket</a>
+
+<table class="table table-bordered table-hover">
+    <thead class="table-light">
+        <tr>
+            <th>Title</th>
+            <th>Status</th>
+            <th>Created By</th>
+            <th>Assigned To</th>
+            <th>Created Date</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Title</td>
+                <td>@item.Status</td>
+                <td>@item.CreatedByUser?.Email</td>
+                <td>@item.AssignedToUser?.Email</td>
+                <td>@item.CreatedDate.ToShortDateString()</td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@item.TicketId" class="btn btn-sm btn-info">Details</a>
+                    <a asp-action="Edit" asp-route-id="@item.TicketId" class="btn btn-sm btn-warning">Edit</a>
+                    <a asp-action="Delete" asp-route-id="@item.TicketId" class="btn btn-sm btn-danger">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

@@ -1,0 +1,116 @@
+﻿@model TicketSystem.Models.Ticket
+@using System.Security.Claims
+
+@{
+    ViewData["Title"] = "Details";
+    Layout = "~/Views/Shared/_TemplateLayout.cshtml";
+
+    var isAuth = User?.Identity?.IsAuthenticated ?? false;
+    var email = isAuth ? User.FindFirst(ClaimTypes.Email)?.Value : null;
+    var isAdmin = User.IsInRole("Admin");
+    var userId = long.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var uid) ? uid : (long?)null;
+
+    var returnToTab = (string)Context.Request.Query["returnToTab"];
+    string backText = returnToTab switch
+    {
+        "kanban" => "Back to Board",
+        "created" => "Back to List",
+        "assigned" => "Back to List",
+        _ => "Back to Home"
+    };
+    bool hasTab = returnToTab == "kanban" || returnToTab == "created" || returnToTab == "assigned";
+
+    bool isCreator = userId != null && Model.CreatedByUserId == userId.Value;
+    bool isAssigned = userId != null && Model.AssignedToUserId == userId.Value;
+}
+
+<h1>Ticket Details</h1>
+
+<hr />
+<dl class="row">
+    <dt class="col-sm-2">Title</dt>
+    <dd class="col-sm-10">@Model.Title</dd>
+
+    <dt class="col-sm-2">Description</dt>
+    <dd class="col-sm-10">@Model.Description</dd>
+
+    <dt class="col-sm-2">Status</dt>
+    <dd class="col-sm-10">@Model.Status</dd>
+
+    <dt class="col-sm-2">Created By</dt>
+    <dd class="col-sm-10">@Model.CreatedByUser?.Email</dd>
+
+    <dt class="col-sm-2">Assigned To</dt>
+    <dd class="col-sm-10">@Model.AssignedToUser?.Email</dd>
+
+    <dt class="col-sm-2">Created Date</dt>
+    <dd class="col-sm-10">@Model.CreatedDate.ToShortDateString()</dd>
+</dl>
+
+<div class="mt-3 d-flex gap-2">
+    @* Edit: sadece admin veya oluşturan görsün *@
+    @if (isAdmin || isCreator)
+    {
+        <a asp-action="Edit"
+           asp-route-id="@Model.TicketId"
+           asp-route-returnToTab="@returnToTab"
+           class="btn btn-warning">Edit</a>
+    }
+
+    @if (hasTab)
+    {
+        <a asp-controller="Home" asp-action="Index" asp-route-tab="@returnToTab" class="btn btn-outline-secondary">@backText</a>
+    }
+    else
+    {
+        <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">@backText</a>
+    }
+</div>
+
+<hr />
+<h3>Comments</h3>
+
+@if (Model.Comments != null && Model.Comments.Any())
+{
+    foreach (var comment in Model.Comments)
+    {
+        <div style="border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;">
+            <strong>@comment.User.Email</strong> - @comment.CreatedAt.ToString("g")
+            <p>@comment.commentText</p>
+
+            @* Sadece yorum sahibi ise sil/düzenle butonlarını göster *@
+            @if (userId != null && comment.userId == userId.Value)
+            {
+                <form asp-controller="Comments" asp-action="Delete" method="post" style="display:inline;">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@comment.commentId" />
+                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                </form>
+
+                <a asp-controller="Comments" asp-action="Edit" asp-route-id="@comment.commentId" class="btn btn-sm btn-warning">Edit</a>
+            }
+        </div>
+    }
+}
+else
+{
+    <p>No comments yet.</p>
+}
+
+<hr />
+<h4>Add Comment</h4>
+
+@* Admin / oluşturan / assigned olanlar yorum ekleme formunu görsün *@
+@if (isAdmin || isCreator || isAssigned)
+{
+    <form asp-controller="Comments" asp-action="Add" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="ticketId" value="@Model.TicketId" />
+        <textarea name="commentText" rows="4" cols="50" required></textarea><br />
+        <button type="submit" class="btn btn-primary">Send</button>
+    </form>
+}
+else
+{
+    <p class="text-muted">You do not have permission to comment on this ticket.</p>
+}

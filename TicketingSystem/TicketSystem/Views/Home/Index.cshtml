@@ -1,0 +1,547 @@
+﻿@using System
+@using System.Linq
+@using System.Collections.Generic
+@using System.Text.Json
+@using TicketSystem.Enums
+@using TicketSystem.Models
+@using System.Security.Claims
+
+@{
+    ViewData["Title"] = "Ana Sayfa";
+    Layout = "~/Views/Shared/_TemplateLayout.cshtml";
+
+    // Controller set etmezse claims'ten doldur 
+    var email = (ViewData["Email"] as string)
+                ?? (User?.Identity?.IsAuthenticated ?? false
+                    ? User.FindFirst(ClaimTypes.Email)?.Value
+                    : null);
+
+    var assigned = ViewData["Assigned"] as List<Ticket>;
+    var created = ViewData["Created"] as List<Ticket>;
+
+    int assignedPage = ViewData["AssignedPage"] is int ap ? ap : 1;
+    int createdPage = ViewData["CreatedPage"] is int cp ? cp : 1;
+    int assignedTotalPages = ViewData["AssignedTotalPages"] is int atp ? atp : 1;
+    int createdTotalPages = ViewData["CreatedTotalPages"] is int ctp ? ctp : 1;
+
+    var aq = (string)(ViewData["AssignedQuery"] ?? "");
+    var cq = (string)(ViewData["CreatedQuery"] ?? "");
+    int? asf = ViewData["AssignedStatusFilter"] as int?;
+    int? csf = ViewData["CreatedStatusFilter"] as int?;
+
+    var queryTab = (string)(ViewData["ActiveTab"] ?? (string)ViewContext.HttpContext.Request.Query["tab"]);
+    var activeTab = string.IsNullOrWhiteSpace(queryTab) ? "assigned" : queryTab;
+    bool isAssignedActive = activeTab == "assigned";
+    bool isCreatedActive = activeTab == "created";
+    bool isKanbanActive = activeTab == "kanban";
+
+    var statusValues = Enum.GetValues(typeof(TicketStatus)).Cast<TicketStatus>().ToList();
+}
+
+<h1 class="mt-4">Welcome, @email</h1>
+
+<ul class="nav nav-tabs mb-4" id="ticketTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link @(isAssignedActive ? "active" : "")"
+                id="assigned-tab" data-bs-toggle="tab" data-bs-target="#assigned"
+                type="button" role="tab">
+            Assigned To Me
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link @(isCreatedActive ? "active" : "")"
+                id="created-tab" data-bs-toggle="tab" data-bs-target="#created"
+                type="button" role="tab">
+            Created By Me
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link @(isKanbanActive ? "active" : "")"
+                id="kanban-tab" data-bs-toggle="tab" data-bs-target="#kanban"
+                type="button" role="tab">
+            Kanban
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content">
+    <!-- ASSIGNED -->
+    <div class="tab-pane fade @(isAssignedActive ? "show active" : "")" id="assigned" role="tabpanel">
+        <form method="get" class="row gy-2 gx-2 align-items-center mb-3">
+            <input type="hidden" name="tab" value="assigned" />
+            <input type="hidden" name="assignedPage" value="1" />
+            <input type="hidden" name="createdPage" value="@createdPage" />
+
+            <div class="col-sm-6 col-md-4">
+                <input name="aq" value="@aq" class="form-control" placeholder="Search title or description..." />
+            </div>
+
+            <div class="col-sm-6 col-md-3">
+                <select name="asf" class="form-select">
+                    <option value="">All statuses</option>
+                    @foreach (var s in statusValues)
+                    {
+                        var val = (int)s;
+                        if (asf.HasValue && asf.Value == val)
+                        {
+                            <option value="@val" selected>@s.ToString()</option>
+                        }
+                        else
+                        {
+                            <option value="@val">@s.ToString()</option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <div class="col-auto">
+                <button class="btn btn-outline-secondary" type="submit">Apply</button>
+                <a asp-action="Index" asp-route-tab="assigned" asp-route-createdPage="@createdPage" class="btn btn-link">Clear</a>
+            </div>
+
+            <input type="hidden" name="cq" value="@cq" />
+            <input type="hidden" name="csf" value="@(csf?.ToString() ?? "")" />
+        </form>
+
+        <table class="table table-bordered table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Title</th>
+                    <th>Status</th>
+                    <th>Created Date</th>
+                    <th style="width:180px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (assigned?.Any() == true)
+                {
+                    foreach (var t in assigned)
+                    {
+                        <tr>
+                            <td>@t.Title</td>
+                            <td>@(Enum.GetName(typeof(TicketStatus), t.Status) ?? t.Status.ToString())</td>
+                            <td>@t.CreatedDate.ToString("yyyy-MM-dd")</td>
+                            <td>
+                                <a asp-controller="Tickets"
+                                   asp-action="Details"
+                                   asp-route-id="@t.TicketId"
+                                   asp-route-returnToTab="assigned"
+                                   class="btn btn-sm btn-outline-primary">Details</a>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="4" class="text-center text-muted">No tickets assigned to you.</td></tr>
+                }
+            </tbody>
+        </table>
+
+        @if (assignedTotalPages > 1)
+        {
+            <nav>
+                <ul class="pagination">
+                    @for (int i = 1; i <= assignedTotalPages; i++)
+                    {
+                        <li class="page-item @(i == assignedPage ? "active" : "")">
+                            <a class="page-link"
+                               asp-action="Index"
+                               asp-route-assignedPage="@i"
+                               asp-route-createdPage="@createdPage"
+                               asp-route-tab="assigned"
+                               asp-route-aq="@aq"
+                               asp-route-cq="@cq"
+                               asp-route-asf="@(asf?.ToString() ?? "")"
+                               asp-route-csf="@(csf?.ToString() ?? "")">@i</a>
+                        </li>
+                    }
+                </ul>
+            </nav>
+        }
+    </div>
+
+    <!-- CREATED -->
+    <div class="tab-pane fade @(isCreatedActive ? "show active" : "")" id="created" role="tabpanel">
+        <form method="get" class="row gy-2 gx-2 align-items-center mb-3">
+            <input type="hidden" name="tab" value="created" />
+            <input type="hidden" name="createdPage" value="1" />
+            <input type="hidden" name="assignedPage" value="@assignedPage" />
+
+            <div class="col-sm-6 col-md-4">
+                <input name="cq" value="@cq" class="form-control" placeholder="Search title or description..." />
+            </div>
+
+            <div class="col-sm-6 col-md-3">
+                <select name="csf" class="form-select">
+                    <option value="">All statuses</option>
+                    @foreach (var s in statusValues)
+                    {
+                        var val = (int)s;
+                        if (csf.HasValue && csf.Value == val)
+                        {
+                            <option value="@val" selected>@s.ToString()</option>
+                        }
+                        else
+                        {
+                            <option value="@val">@s.ToString()</option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <div class="col-auto">
+                <button class="btn btn-outline-secondary" type="submit">Apply</button>
+                <a asp-action="Index" asp-route-tab="created" asp-route-assignedPage="@assignedPage" class="btn btn-link">Clear</a>
+            </div>
+
+            <input type="hidden" name="aq" value="@aq" />
+            <input type="hidden" name="asf" value="@(asf?.ToString() ?? "")" />
+        </form>
+
+        <table class="table table-bordered table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Title</th>
+                    <th>Status</th>
+                    <th>Created Date</th>
+                    <th style="width:260px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (created?.Any() == true)
+                {
+                    foreach (var t in created)
+                    {
+                        <tr>
+                            <td>@t.Title</td>
+                            <td>@(Enum.GetName(typeof(TicketStatus), t.Status) ?? t.Status.ToString())</td>
+                            <td>@t.CreatedDate.ToString("yyyy-MM-dd")</td>
+                            <td class="d-flex gap-2">
+                                <a asp-controller="Tickets"
+                                   asp-action="Details"
+                                   asp-route-id="@t.TicketId"
+                                   asp-route-returnToTab="created"
+                                   class="btn btn-sm btn-outline-primary">Details</a>
+                                <a asp-controller="Tickets"
+                                   asp-action="Edit"
+                                   asp-route-id="@t.TicketId"
+                                   asp-route-returnToTab="created"
+                                   class="btn btn-sm btn-outline-warning">Edit</a>
+                                <a asp-controller="Tickets"
+                                   asp-action="Delete"
+                                   asp-route-id="@t.TicketId"
+                                   asp-route-returnToTab="created"
+                                   class="btn btn-sm btn-outline-danger">Delete</a>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="4" class="text-center text-muted">You haven't created any tickets yet.</td></tr>
+                }
+            </tbody>
+        </table>
+
+        @if (createdTotalPages > 1)
+        {
+            <nav>
+                <ul class="pagination">
+                    @for (int i = 1; i <= createdTotalPages; i++)
+                    {
+                        <li class="page-item @(i == createdPage ? "active" : "")">
+                            <a class="page-link"
+                               asp-action="Index"
+                               asp-route-createdPage="@i"
+                               asp-route-assignedPage="@assignedPage"
+                               asp-route-tab="created"
+                               asp-route-aq="@aq"
+                               asp-route-cq="@cq"
+                               asp-route-asf="@(asf?.ToString() ?? "")"
+                               asp-route-csf="@(csf?.ToString() ?? "")">@i</a>
+                        </li>
+                    }
+                </ul>
+            </nav>
+        }
+    </div>
+
+    <!-- KANBAN-->
+    <div class="tab-pane fade @(isKanbanActive ? "show active" : "")" id="kanban" role="tabpanel">
+        <!-- Arama -->
+        <div class="card mb-3">
+            <div class="card-body">
+                <form class="row g-2 align-items-center" onsubmit="return false;">
+                    <div class="col-sm-8 col-md-6">
+                        <input id="kanban-search" class="form-control" placeholder="Search title or description..." />
+                    </div>
+                    <div class="col-auto">
+                        <button type="button" class="btn btn-outline-secondary" id="kanban-clear-search">Clear</button>
+                    </div>
+                    <div class="col-auto ms-auto">
+                        <button type="button" class="btn btn-outline-danger" id="kanban-clear-pins">Clear all pins</button>
+                    </div>
+                </form>
+                <div id="kanban-results" class="mt-3"></div>
+            </div>
+        </div>
+
+        <!-- Sütunlar -->
+        <div class="row g-3">
+            @foreach (var s in statusValues)
+            {
+                var sval = (int)s;
+                <div class="col-12 col-md-6 col-xl-3">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span class="fw-semibold">@s.ToString()</span>
+                            <span class="badge bg-secondary" id="kanban-count-@sval">0</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="kanban-col" id="kanban-col-@sval">
+                                <div class="text-muted small">No pinned tickets in this column.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Anti-forgery -->
+        <form id="af" method="post">@Html.AntiForgeryToken()</form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            // Assigned + Created 
+            var raw = {};
+            @if (assigned != null)
+            {
+                    foreach (var t in assigned)
+                    {
+                            var title = t.Title ?? "";
+                            var desc = t.Description ?? "";
+                            var date = t.CreatedDate.ToString("yyyy-MM-dd");
+                            <text>
+                            raw[@t.TicketId] = {
+                                id: @t.TicketId,
+                                title: @Html.Raw(JsonSerializer.Serialize(title)),
+                                description: @Html.Raw(JsonSerializer.Serialize(desc)),
+                                status: @((int)t.Status),
+                                createdDate: @Html.Raw(JsonSerializer.Serialize(date)),
+                                isAssigned: true,
+                                isCreated: false,
+                                detailsUrl: @Html.Raw(JsonSerializer.Serialize(Url.Action("Details", "Tickets", new { id = t.TicketId, returnToTab = "kanban" }))),
+                                editUrl:    @Html.Raw(JsonSerializer.Serialize(Url.Action("Edit", "Tickets", new { id = t.TicketId, returnToTab = "kanban" }))),
+                                deleteUrl:  @Html.Raw(JsonSerializer.Serialize(Url.Action("Delete", "Tickets", new { id = t.TicketId, returnToTab = "kanban" })))
+                            };
+                            </text>
+                    }
+            }
+            @if (created != null)
+            {
+                    foreach (var t in created)
+                    {
+                            var title = t.Title ?? "";
+                            var desc = t.Description ?? "";
+                            var date = t.CreatedDate.ToString("yyyy-MM-dd");
+                            <text>
+                            if (!raw[@t.TicketId]) {
+                                raw[@t.TicketId] = {
+                                    id: @t.TicketId,
+                                    title: @Html.Raw(JsonSerializer.Serialize(title)),
+                                    description: @Html.Raw(JsonSerializer.Serialize(desc)),
+                                    status: @((int)t.Status),
+                                    createdDate: @Html.Raw(JsonSerializer.Serialize(date)),
+                                    isAssigned: false,
+                                    isCreated: true,
+                                    detailsUrl: @Html.Raw(JsonSerializer.Serialize(Url.Action("Details", "Tickets", new { id = t.TicketId, returnToTab = "kanban" }))),
+                                    editUrl:    @Html.Raw(JsonSerializer.Serialize(Url.Action("Edit", "Tickets", new { id = t.TicketId, returnToTab = "kanban" }))),
+                                    deleteUrl:  @Html.Raw(JsonSerializer.Serialize(Url.Action("Delete", "Tickets", new { id = t.TicketId, returnToTab = "kanban" })))
+                                };
+                            } else {
+                                raw[@t.TicketId].isCreated = true;
+                            }
+                            </text>
+                    }
+            }
+            var KANBAN_DATA = Object.values(raw);
+
+            
+            // DB-PERSISTED PIN HANDLERS
+           
+            var pinned = new Set(); 
+
+            function getToken(){
+                var t = document.querySelector('#af input[name="__RequestVerificationToken"]');
+                return t ? t.value : null;
+            }
+
+            async function apiPins(){
+                const r = await fetch('@Url.Action("Pins", "Kanban")', { credentials:'same-origin' });
+                if (!r.ok) throw new Error('Pins load failed');
+                return await r.json(); // [ids]
+            }
+            async function apiAdd(id){
+                const f = new FormData(); var tk = getToken(); if (tk) f.append('__RequestVerificationToken', tk);
+                f.append('ticketId', id);
+                const r = await fetch('@Url.Action("Add", "Kanban")', { method:'POST', body:f, credentials:'same-origin' });
+                if (!r.ok) throw new Error('Add failed');
+            }
+            async function apiRemove(id){
+                const f = new FormData(); var tk = getToken(); if (tk) f.append('__RequestVerificationToken', tk);
+                f.append('ticketId', id);
+                const r = await fetch('@Url.Action("Remove", "Kanban")', { method:'POST', body:f, credentials:'same-origin' });
+                if (!r.ok) throw new Error('Remove failed');
+            }
+
+            async function togglePin(id){
+                const wantPin = !pinned.has(id);
+                if (wantPin) { await apiAdd(id); pinned.add(id); }
+                else         { await apiRemove(id); pinned.delete(id); }
+                renderColumns();
+                renderSearchResults();
+            }
+
+            // ----- Render: Columns
+            function clearColumns(){
+                document.querySelectorAll('.kanban-col').forEach(col=>{
+                    col.innerHTML = '<div class="text-muted small">No pinned tickets in this column.</div>';
+                });
+                document.querySelectorAll('[id^="kanban-count-"]').forEach(b=> b.textContent = '0');
+            }
+
+            function renderColumns(){
+                clearColumns();
+                var byStatus = {};
+                KANBAN_DATA.forEach(t=>{
+                    if (!pinned.has(t.id)) return;
+                    (byStatus[t.status] ||= []).push(t);
+                });
+                Object.keys(byStatus).forEach(k=>{
+                    var list = byStatus[k].sort((a,b)=> a.createdDate < b.createdDate ? 1 : -1);
+                    var col = document.getElementById('kanban-col-'+k);
+                    if (!col) return;
+                    col.innerHTML = '';
+                    list.forEach(t=>{
+                        var badges = '';
+                        if (t.isAssigned) badges += '<span class="badge bg-primary me-1">Assigned</span>';
+                        if (t.isCreated)  badges += '<span class="badge bg-success">Created</span>';
+
+                        var card = document.createElement('div');
+                        card.className = 'mb-3';
+                        card.innerHTML = `
+                          <div class="border rounded p-2 bg-light">
+                            <div class="d-flex justify-content-between align-items-start">
+                              <div class="me-2">
+                                <div class="fw-semibold">${t.title}</div>
+                                <div class="small text-muted">${t.createdDate}</div>
+                              </div>
+                              <div class="d-flex gap-1">${badges}</div>
+                            </div>
+                            <div class="mt-2 d-flex flex-wrap gap-2">
+                              <a href="${t.detailsUrl}" class="btn btn-sm btn-outline-primary">Details</a>
+                              ${t.isCreated ? `<a href="${t.editUrl}" class="btn btn-sm btn-outline-warning">Edit</a>
+                                               <a href="${t.deleteUrl}" class="btn btn-sm btn-outline-danger">Delete</a>` : ''}
+                              <button class="btn btn-sm btn-outline-secondary" data-unpin="${t.id}">Unpin</button>
+                            </div>
+                          </div>`;
+                        col.appendChild(card);
+                    });
+                    var badge = document.getElementById('kanban-count-'+k);
+                    if (badge) badge.textContent = String(list.length);
+                });
+
+                // Unpin actions
+                document.querySelectorAll('[data-unpin]').forEach(btn=>{
+                    btn.onclick = function(){
+                        var id = parseInt(this.getAttribute('data-unpin'));
+                        togglePin(id);
+                    };
+                });
+            }
+
+            // ----- Search in Kanban
+            var input   = document.getElementById('kanban-search');
+            var results = document.getElementById('kanban-results');
+            var clearBtn = document.getElementById('kanban-clear-search');
+            var clearPinsBtn = document.getElementById('kanban-clear-pins');
+
+            function filterTickets(q){
+                q = (q || '').trim().toLowerCase();
+                if (!q) return [];
+                return KANBAN_DATA.filter(t =>
+                    (t.title && t.title.toLowerCase().includes(q)) ||
+                    (t.description && t.description.toLowerCase().includes(q))
+                ).slice(0, 20);
+            }
+
+            function renderSearchResults(){
+                var q = input ? input.value : '';
+                var list = filterTickets(q);
+                if (!q){
+                    results.innerHTML = '<div class="text-muted small">Type to search within loaded tickets (Assigned + Created). Use Pin to add into Kanban.</div>';
+                    return;
+                }
+                if (!list.length){
+                    results.innerHTML = '<div class="text-muted small">No matches.</div>';
+                    return;
+                }
+                var html = '<div class="list-group">';
+                list.forEach(t=>{
+                    var isPinned = pinned.has(t.id);
+                    html += `
+                      <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div class="me-2">
+                          <div class="fw-semibold">${t.title}</div>
+                          <div class="small text-muted">#${t.id} • ${t.createdDate}</div>
+                        </div>
+                        <div class="d-flex gap-2">
+                          <button class="btn btn-sm ${isPinned?'btn-secondary':'btn-outline-primary'}"
+                                  data-pin="${t.id}">${isPinned?'Pinned':'Pin to board'}</button>
+                          <a href="${t.detailsUrl}" class="btn btn-sm btn-outline-secondary">Open</a>
+                        </div>
+                      </div>`;
+                });
+                html += '</div>';
+                results.innerHTML = html;
+
+                // Pin actions
+                document.querySelectorAll('[data-pin]').forEach(btn=>{
+                    btn.onclick = function(){
+                        var id = parseInt(this.getAttribute('data-pin'));
+                        togglePin(id);
+                    };
+                });
+            }
+
+            input && (input.oninput = renderSearchResults);
+            clearBtn && (clearBtn.onclick = function(){ input.value=''; renderSearchResults(); });
+
+            clearPinsBtn && (clearPinsBtn.onclick = async function(){
+                if (!confirm('Clear all pinned tickets from Kanban?')) return;
+                const ids = Array.from(pinned);
+                for (const id of ids) { try { await apiRemove(id); } catch(e){} }
+                pinned.clear();
+                renderColumns();
+                renderSearchResults();
+            });
+
+            // pins from server
+            (async function init(){
+                try{
+                    const ids = await apiPins();
+                    pinned = new Set(ids);
+                }catch(e){
+                    pinned = new Set();
+                    console.error(e);
+                }
+                renderColumns();
+                renderSearchResults();
+            })();
+        })();
+    </script>
+}

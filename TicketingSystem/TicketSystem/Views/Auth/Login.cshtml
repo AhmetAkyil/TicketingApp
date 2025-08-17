@@ -1,0 +1,42 @@
+﻿@{
+    Layout = "~/Views/Shared/_LoginLayout.cshtml";
+    ViewData["Title"] = "Sign in";
+}
+
+<div class="d-flex justify-content-center align-items-center min-vh-100">
+    <div class="card p-4 shadow w-100" style="max-width: 450px;">
+        <h3 class="text-center mb-4">Sign in</h3>
+
+        <form method="post" action="/auth/login">
+            @Html.AntiForgeryToken()
+            <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <input type="text" id="email" name="email" class="form-control form-control-lg" required />
+            </div>
+
+            <div class="mb-3">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" id="password" name="password" class="form-control form-control-lg" required />
+            </div>
+
+            <!-- Google reCAPTCHA -->
+            <div class="mb-3">
+                <div class="g-recaptcha" data-sitekey="@ViewBag.SiteKey"></div>
+            </div>
+
+            <div class="d-grid">
+                <button type="submit" class="btn btn-primary btn-lg">Sign In</button>
+            </div>
+
+            @if (Context.Request.Query["rateLimit"] == "true")
+            {
+                <div class="alert alert-warning mt-3">
+                    Çok fazla giriş denemesi yaptınız. Lütfen 1 dakika sonra tekrar deneyin.
+                </div>
+            }
+        </form>
+    </div>
+</div>
+
+<!-- Google reCAPTCHA script -->
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>

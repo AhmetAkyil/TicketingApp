@@ -1,0 +1,21 @@
+﻿@model TicketSystem.Models.Comment
+
+@{
+    ViewData["Title"] = "Yorumu Düzenle";
+    Layout = "~/Views/Shared/_TemplateLayout.cshtml";
+}
+
+<h2>Edit Comment</h2>
+
+<form asp-action="Edit" method="post">
+    <input type="hidden" asp-for="commentId" />
+    <input type="hidden" asp-for="TicketId" />
+
+    <div class="form-group">
+        <label asp-for="commentText">Comment</label>
+        <textarea asp-for="commentText" class="form-control" rows="4"></textarea>
+    </div>
+
+    <button type="submit" class="btn btn-success">Save</button>
+    <a asp-controller="Tickets" asp-action="Details" asp-route-id="@Model.TicketId" class="btn btn-secondary">Geri</a>
+</form>
