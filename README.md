@@ -63,29 +63,27 @@ A simple **ASP.NET Core MVC** ticketing app that includes both **secure** and **
 
 - **Data** – EF Core DbContext, relationships  
   **`Data/AppDbContext.cs`** →  
-  https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/TicketSystem/Data/AppDbContext.cs
+  https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystemData/AppDbContext.cs
 
-- **Config** – app settings, keys  
-  **`appsettings.json`** →  
-  https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/TicketSystem/appsettings.json
 
-- **MVC** – Controllers, Views, Models (links aşağıda)
+
+
 
 ---
 
 ## 📂 Entities
 
 - **User** — Minimal user (Email, Password, Role). _Plain-text for demo (bilerek)._  
-  https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/TicketSystem/Models/User.cs
+  https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/Models/User.cs
 
 - **UserInsecure** — SQLi gösterimi için ayrılmış tablo.  
-  https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/TicketSystem/Models/UserInsecure.cs
+  https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/Models/UserInsecure.cs
 
 - **Ticket** — Title, Description, Status; `CreatedByUser`, `AssignedToUser`.  
-  https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/TicketSystem/Models/Ticket.cs
+  https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/Models/Ticket.cs
 
 - **Comment** — Ticket yorumları; yazar + timestamp.  
-  https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/TicketSystem/Models/Comment.cs
+  https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/Models/Comment.cs
 
 ---
 
@@ -96,41 +94,41 @@ A simple **ASP.NET Core MVC** ticketing app that includes both **secure** and **
   - `/auth/login-open` → **weak** (brute force demoları)
   - `/auth/login-insecure` → **vulnerable** (`FromSqlRaw` string concat → **SQLi**)
   - `/auth/logout`, `/auth/access-denied`
-  https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/TicketSystem/Controllers/AuthController.cs
+  https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/Controllers/AuthController.cs
 
 - **UsersController**
   - `[Authorize(Roles="Admin")]` (Admin-only)
   - List/Details/Create/Edit (CSRF)
   - _Demo misconfig_: `create-auto` örneği (AllowAnonymous + no CSRF)
-  https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/TicketSystem/Controllers/UsersController.cs
+  https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/Controllers/UsersController.cs
 
 - **TicketsController**
   - `[Authorize]` (login zorunlu)
   - **Ownership checks**: sadece **Creator** veya **Admin** modifiye edebilir
   - Create/Edit/Delete → **[ValidateAntiForgeryToken]**
-  https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/TicketSystem/Controllers/TicketsController.cs
+  https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/Controllers/TicketsController.cs
 
 - **CommentsController**
   - `[Authorize]`
   - Add/Edit/Delete with CSRF + ownership checks
-  https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/TicketSystem/Controllers/CommentsController.cs
+  https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/Controllers/CommentsController.cs
 
 - **KanbanController** (opsiyonel UI)
   - Basit board/pin özellikleri (güvenlik demosunun parçası değil)
-  https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/TicketSystem/Controllers/KanbanController.cs
+  https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/Controllers/KanbanController.cs
 
 ---
 
 ## 🛠 Services
 
 - **RecaptchaService** — Google reCAPTCHA doğrulaması  
-  https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/TicketSystem/Services/RecaptchaService.cs
+  https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/Services/RecaptchaService.cs
 
 - **AccountCreationService** — Demo kullanıcı üretir  
-  https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/TicketSystem/Services/AccountCreationService.cs
+  https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/Services/AccountCreationService.cs
 
 - **LoginAttemptService** — (İllüstratif) login denemesi takibi  
-  https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/TicketSystem/Services/LoginAttemptService.cs
+  https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/Services/LoginAttemptService.cs
 
 ---
 
