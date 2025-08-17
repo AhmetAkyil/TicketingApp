@@ -70,7 +70,7 @@ A simple **ASP.NET Core MVC** ticketing app that includes both **secure** and **
 
 ---
 
-## Controllers & Endpoints
+## Controllers 
 
 - **[AuthController.cs](https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/Controllers/AuthController.cs)**
   - `/auth/login` → **secure** login (RateLimiter + reCAPTCHA + EF LINQ)  
