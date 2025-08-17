@@ -17,11 +17,7 @@ A simple **ASP.NET Core MVC** ticketing app that includes both **secure** and **
 - [Entities](#entities)
 - [Controllers & Endpoints](#controllers--endpoints)
 - [Services](#services)
-- [Security Highlights (OWASP)](#security-highlights-owasp)
-- [How to Run Locally](#how-to-run-locally)
-- [Demo Playbook](#demo-playbook)
-- [Hardening Checklist](#hardening-checklist)
-- [License](#license)
+
 
 ---
 
@@ -45,16 +41,9 @@ A simple **ASP.NET Core MVC** ticketing app that includes both **secure** and **
 
 ---
 
-## 📌 What Changed vs Previous Version
 
-- Cookie Authentication with **Claims** (`Email`, `Role`)  
-- Attribute-based authorization (`[Authorize]`, `[Authorize(Roles="Admin")]`)  
-- **ASP.NET Rate Limiter** (`LoginPolicy`) for secure login  
-- **Google reCAPTCHA** integration for bot protection  
-- Dedicated **`UserInsecure`** table for SQL Injection demo  
-- Consistent use of `[ValidateAntiForgeryToken]` on state-changing actions  
 
----
+
 
 ## 🏗 Architecture
 
@@ -64,8 +53,6 @@ A simple **ASP.NET Core MVC** ticketing app that includes both **secure** and **
 - **Data** → EF Core DbContext, relationships  
   [AppDbContext.cs](https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/Data/AppDbContext.cs)
 
-- **Config** → Application settings  
-  [appsettings.json](https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/appsettings.json)
 
 ---
 
@@ -73,9 +60,6 @@ A simple **ASP.NET Core MVC** ticketing app that includes both **secure** and **
 
 - **User** — Minimal user (Email, Password, Role). ⚠️ Passwords stored in **plain text** for demo.  
   [User.cs](https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/Models/User.cs)
-
-- **UserInsecure** — Used exclusively for SQL Injection demo.  
-  [UserInsecure.cs](https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/Models/UserInsecure.cs)
 
 - **Ticket** — Title, Description, Status; `CreatedByUser`, `AssignedToUser`.  
   [Ticket.cs](https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/Models/Ticket.cs)
@@ -90,13 +74,13 @@ A simple **ASP.NET Core MVC** ticketing app that includes both **secure** and **
 - **[AuthController.cs](https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/Controllers/AuthController.cs)**
   - `/auth/login` → **secure** login (RateLimiter + reCAPTCHA + EF LINQ)  
   - `/auth/login-open` → **weak demo** (no CAPTCHA, no rate limit → brute-force risk)  
-  - `/auth/login-insecure` → **SQL Injection demo** using raw SQL (see [line ~45](https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/Controllers/AuthController.cs#L45))  
+  - `/auth/login-insecure` → **SQL Injection demo** using raw SQL 
   - `/auth/logout`, `/auth/access-denied`
 
 - **[UsersController.cs](https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/Controllers/UsersController.cs)**
   - Restricted with `[Authorize(Roles="Admin")]`  
   - CRUD actions for users (CSRF-protected)  
-  - `create-auto` → intentionally misconfigured (`[AllowAnonymous]` + no CSRF)  
+  - `create-auto` 
 
 - **[TicketsController.cs](https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/Controllers/TicketsController.cs)**
   - `[Authorize]` class-level  
@@ -116,15 +100,6 @@ A simple **ASP.NET Core MVC** ticketing app that includes both **secure** and **
 
 - [RecaptchaService.cs](https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/Services/RecaptchaService.cs) → Validates Google reCAPTCHA tokens  
 - [AccountCreationService.cs](https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/Services/AccountCreationService.cs) → Generates demo users  
-- [LoginAttemptService.cs](https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/Services/LoginAttemptService.cs) → Tracks failed login attempts  
+
 
 ---
-
-## 🔐 Security Highlights (OWASP)
-
-### A03: SQL Injection (demo)
-
-**Vulnerable code ([AuthController.cs#L45](https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/Controllers/AuthController.cs#L45)):**
-```csharp
-var sql = $"SELECT * FROM UsersInsecure WHERE Email = '{email}' AND Password = '{password}'";
-var rows = await _context.UsersInsecure.FromSqlRaw(sql).ToListAsync();
