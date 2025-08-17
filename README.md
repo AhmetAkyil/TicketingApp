@@ -126,8 +126,9 @@ A simple **ASP.NET Core MVC** ticketing app that includes both **secure** and **
 
 | Endpoint               | Vulnerability     | Demo Tool           | Secure Counterpart |
 |------------------------|------------------|---------------------|--------------------|
-| `/auth/login-insecure` | SQL Injection    | Postman (payload `' OR 1=1 --`) | `/auth/login` |
+| `/auth/login-insecure` | SQL Injection (via **email** field, e.g. `user@example.com' --`) | Postman | `/auth/login` |
 | `/auth/login-open`     | Brute Force      | Python script       | `/auth/login` |
+
 
 ---
 
