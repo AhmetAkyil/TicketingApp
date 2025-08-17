@@ -8,7 +8,6 @@ This repository demonstrates **OWASP Top 10** concepts — focusing on:
 The project is a simple **ASP.NET Core MVC** ticketing app.  
 It contains both **secure implementations** and **deliberately vulnerable endpoints** for demonstration.
 
-
 ---
 
 ## 📑 Table of Contents
@@ -35,7 +34,7 @@ It contains both **secure implementations** and **deliberately vulnerable endpoi
    - ❌ Vulnerable: `/auth/login-insecure` → **Raw SQL** (`FromSqlRaw`) → SQL Injection
 
 2. **Ticket Operations**
-   - Create / Edit / Delete tickets with **CSRF protection**
+   - Create / Edit / Delete with **CSRF protection**
    - Only **Creator**, **Assignee**, or **Admin** may edit/view
 
 3. **Comment Operations**
@@ -59,67 +58,87 @@ It contains both **secure implementations** and **deliberately vulnerable endpoi
 
 ## 🏗 Architecture
 
+- **Program & Startup**
+  - Auth cookies, rate limiter, DI registrations  
+  - **File:** [`TicketingSystem/Program.cs`](TicketingSystem/Program.cs)
 
-- **Controllers** → Handle HTTP requests  
-- **Models/Entities** → EF Core classes  
-- **Data** → AppDbContext (DbSets, relations)  
-- **Services** → reCAPTCHA, Account generator, Login throttling  
-- **Views** → Razor UI  
-- **Program.cs** → DI setup, auth, rate limiting  
+- **Data Layer**
+  - EF Core context, DbSets, relationships  
+  - **File:** [`TicketingSystem/Data/AppDbContext.cs`](TicketingSystem/Data/AppDbContext.cs)
 
-Target framework: **.NET 8** + **EF Core 9.x**
+- **MVC**
+  - Controllers → HTTP endpoints  
+  - Views → Razor UI  
+  - Models → Entities & ViewModels  
 
 ---
 
 ## 📂 Entities
 
-- **User** → Email, Password, Role (⚠️ stored in plain text for demo)  
-- **UserInsecure** → Demo-only table used for SQL Injection  
-- **Ticket** → Title, Description, Status, Creator/Assignee relations  
-- **Comment** → Ticket comments with author + timestamps  
-- **AppDbContext** → EF Core context with DbSets  
+- **User** — Minimal user record (Email, Password, Role). _Plain-text for demo ( intentionally insecure )._  
+  **File:** [`TicketingSystem/Models/User.cs`](TicketingSystem/Models/User.cs)
+
+- **UserInsecure** — Separate table **only** for SQL Injection demo.  
+  **File:** [`TicketingSystem/Models/UserInsecure.cs`](TicketingSystem/Models/UserInsecure.cs)
+
+- **Ticket** — Title, Description, Status + Creator/Assignee relations.  
+  **File:** [`TicketingSystem/Models/Ticket.cs`](TicketingSystem/Models/Ticket.cs)
+
+- **Comment** — Per-ticket comments with author and timestamps.  
+  **File:** [`TicketingSystem/Models/Comment.cs`](TicketingSystem/Models/Comment.cs)
 
 ---
 
 ## ⚙ Controllers & Endpoints
 
 ### AuthController
-- `GET /auth/login` → login form (injects reCAPTCHA key)  
-- `POST /auth/login` → **SECURE** (RateLimiter + reCAPTCHA + EF LINQ)  
-- `POST /auth/login-open` → **WEAK** (no CAPTCHA, no rate limit → brute force risk)  
-- `POST /auth/login-insecure` → **VULNERABLE** raw SQL → SQL Injection  
-- `GET /auth/logout` → clears cookie auth  
-- `GET /auth/access-denied` → shown on forbidden access  
+- Secure login: reCAPTCHA + RateLimiter + EF LINQ (parameterized)  
+- Weak login: no CAPTCHA / no rate limit (brute-force demo)  
+- Vulnerable login: **string-concat SQL** with `FromSqlRaw` (SQLi demo)  
+- Logout & AccessDenied endpoints  
+**File:** [`TicketingSystem/Controllers/AuthController.cs`](TicketingSystem/Controllers/AuthController.cs)
 
 ### UsersController
-- `[Authorize(Roles="Admin")]` class-level  
-- List, details, create, edit (all CSRF-protected)  
-- `POST /users/create-auto` → demo helper (⚠️ AllowAnonymous + no CSRF → misconfiguration example)  
+- Admin-only (class-level `[Authorize(Roles="Admin")]`)  
+- List/Details/Create/Edit users (CSRF-protected)  
+- **Demo misconfig:** `create-auto` action may use `[AllowAnonymous]` to show risk  
+**File:** [`TicketingSystem/Controllers/UsersController.cs`](TicketingSystem/Controllers/UsersController.cs)
 
 ### TicketsController
-- `[Authorize]` class-level  
-- Index, Details, Create (with CSRF), Edit, Delete  
-- Authorization: only **Creator** or **Admin** can modify  
+- Auth-required (class-level `[Authorize]`)  
+- Ownership checks: **only Creator or Admin** can modify; Creator/Assignee/Admin can view  
+- CSRF on mutating actions  
+**File:** [`TicketingSystem/Controllers/TicketsController.cs`](TicketingSystem/Controllers/TicketsController.cs)
 
 ### CommentsController
-- `[Authorize]` class-level  
-- Add, Edit, Delete with CSRF + ownership checks  
+- Auth-required; CSRF-protected add/edit/delete  
+- Simple ownership checks for comment actions  
+**File:** [`TicketingSystem/Controllers/CommentsController.cs`](TicketingSystem/Controllers/CommentsController.cs)
+
+### (Optional) KanbanController
+- Board/pin UI helpers; not central to security demo  
+**File:** [`TicketingSystem/Controllers/KanbanController.cs`](TicketingSystem/Controllers/KanbanController.cs)
 
 ---
 
 ## 🛠 Services
 
-- **RecaptchaService** → Verifies Google reCAPTCHA  
-- **AccountCreationService** → Generates demo users  
-- **LoginAttemptService** → Tracks failed login attempts (illustration only)  
+- **RecaptchaService** — Verifies Google reCAPTCHA tokens via HTTP  
+  **File:** [`TicketingSystem/Services/RecaptchaService.cs`](TicketingSystem/Services/RecaptchaService.cs)
+
+- **AccountCreationService** — Generates random demo users/passwords  
+  **File:** [`TicketingSystem/Services/AccountCreationService.cs`](TicketingSystem/Services/AccountCreationService.cs)
+
+- **LoginAttemptService** — Illustrative throttling/attempt tracking  
+  **File:** [`TicketingSystem/Services/LoginAttemptService.cs`](TicketingSystem/Services/LoginAttemptService.cs)
 
 ---
 
 ## 🔐 Security Highlights (OWASP)
 
 ### A03: Injection (SQLi)
-
-**Vulnerable code:**
+**Vulnerable (demo):**
 ```csharp
+// /auth/login-insecure
 var sql = $"SELECT * FROM UsersInsecure WHERE Email = '{email}' AND Password = '{password}'";
 var rows = await _context.UsersInsecure.FromSqlRaw(sql).ToListAsync();
