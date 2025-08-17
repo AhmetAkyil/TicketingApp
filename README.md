@@ -15,7 +15,7 @@ A simple **ASP.NET Core MVC** ticketing app that includes both **secure** and **
 - [What Changed vs Previous Version](#what-changed-vs-previous-version)
 - [Architecture](#architecture)
 - [Entities](#entities)
-- [Controllers](#controllers--endpoints)
+- [Controllers](#controllers)
 - [Services](#services)
 - [Demo Scenarios](#demo-scenarios)
 - [Vulnerable vs Secure Endpoints](#-vulnerable-vs-secure-endpoints)
