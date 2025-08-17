@@ -45,7 +45,7 @@ A simple **ASP.NET Core MVC** ticketing app that includes both **secure** and **
 
 ---
 
-## 🏗 Architecture
+## Architecture
 
 - **Program/Startup** → auth cookies, rate limiting, DI  
   [Program.cs](https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/Program.cs)
@@ -55,7 +55,7 @@ A simple **ASP.NET Core MVC** ticketing app that includes both **secure** and **
 
 ---
 
-## 📂 Entities
+## Entities
 
 - **User** — Minimal user (Email, Password, Role).  
   [User.cs](https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/Models/User.cs)
@@ -68,7 +68,7 @@ A simple **ASP.NET Core MVC** ticketing app that includes both **secure** and **
 
 ---
 
-## ⚙ Controllers & Endpoints
+## Controllers & Endpoints
 
 - **[AuthController.cs](https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/Controllers/AuthController.cs)**
   - `/auth/login` → **secure** login (RateLimiter + reCAPTCHA + EF LINQ)  
@@ -95,14 +95,14 @@ A simple **ASP.NET Core MVC** ticketing app that includes both **secure** and **
 
 ---
 
-## 🛠 Services
+## Services
 
 - [RecaptchaService.cs](https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/Services/RecaptchaService.cs) → Validates Google reCAPTCHA tokens  
 - [AccountCreationService.cs](https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/Services/AccountCreationService.cs) → Generates demo users  
 
 ---
 
-## 🎬 Demo Scenarios
+## Demo Scenarios
 
 1. **SQL Injection Attack**  
    - Insecure endpoint: `/auth/login-insecure`  
@@ -141,7 +141,7 @@ A simple **ASP.NET Core MVC** ticketing app that includes both **secure** and **
 
 ---
 
-## 📐 Demo Flow (SQL Injection)
+## Demo Flow (SQL Injection)
 
 ```mermaid
 sequenceDiagram
