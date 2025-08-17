@@ -21,7 +21,7 @@ A simple **ASP.NET Core MVC** ticketing app that includes both **secure** and **
 - [Vulnerable vs Secure Endpoints](#vulnerable-vs-secure-endpoints)
 - [OWASP Mapping](#owasp-mapping)
 - [Demo Flow](#demo-flow)
-- [Presentation Narrative](#presentation-narrative)
+
 
 ---
 
@@ -105,10 +105,14 @@ A simple **ASP.NET Core MVC** ticketing app that includes both **secure** and **
 ## Demo Scenarios
 
 1. **SQL Injection Attack**  
-   - Insecure endpoint: `/auth/login-insecure`  
-   - Demo: Postman payload `' OR 1=1 --`  
-   - Result: Unauthorized access granted.  
-   - Secure endpoint: `/auth/login` → EF LINQ blocks the attack.
+   - **Insecure endpoint:** `/auth/login-insecure`  
+   - **Demo:** Using Postman with  
+     - `email = user@example.com' --`  
+     - `password = anything`  
+     (The password column is protected by Always Encrypted, so the injection is done on the **email** field).  
+   - **Result:** The SQL query is broken and the password check is bypassed → unauthorized access granted.  
+   - **Secure endpoint:** `/auth/login` → EF LINQ with parameterized queries blocks the injection attempt.
+
 
 2. **Brute Force Attack**  
    - Insecure endpoint: `/auth/login-open` (no CAPTCHA, no rate limit).  
@@ -149,9 +153,9 @@ sequenceDiagram
     participant App
     participant DB
 
-    Attacker->>App: POST /auth/login-insecure ("' OR 1=1 --")
-    App->>DB: Raw SQL
-    DB-->>App: Returns all users
+    Attacker->>App: POST /auth/login-insecure (email = "user@example.com' --")
+    App->>DB: Raw SQL (WHERE Email='user@example.com' -- AND Password='...')
+    DB-->>App: Returns user row (password check bypassed)
     App-->>Attacker: Access Granted (vulnerable)
 
     Attacker->>App: POST /auth/login (same payload)
