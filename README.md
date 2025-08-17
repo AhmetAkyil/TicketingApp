@@ -20,7 +20,8 @@ A simple **ASP.NET Core MVC** ticketing app that includes both **secure** and **
 - [Demo Scenarios](#demo-scenarios)
 - [Vulnerable vs Secure Endpoints](#vulnerable-vs-secure-endpoints)
 - [OWASP Mapping](#owasp-mapping)
-- [Demo Flow](#demo-flow)
+- [Demo Flow (SQL Injection)](#demo-flow-sql-injection)
+
 
 
 ---
