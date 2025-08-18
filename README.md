@@ -75,7 +75,7 @@ A simple **ASP.NET Core MVC** ticketing app that includes both **secure** and **
   - `/auth/login` → **secure** login (RateLimiter + reCAPTCHA + EF LINQ)  
   - `/auth/login-open` → **weak demo** (no CAPTCHA, no rate limit → brute-force risk)  
   - `/auth/login-insecure` → **SQL Injection demo** using raw SQL 
-  - `/auth/logout`, `/auth/access-denied`
+  - `/auth/logout`
 
 - **[UsersController.cs](https://github.com/AhmetAkyil/TicketingApp/blob/main/TicketingSystem/TicketSystem/Controllers/UsersController.cs)**
   - Restricted with `[Authorize(Roles="Admin")]`  
